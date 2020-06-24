@@ -1,0 +1,3 @@
+module FILESTORE-SERVER
+
+go 1.14
