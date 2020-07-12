@@ -21,3 +21,28 @@ func init() {
 func GetDBConnection() *sql.DB {
 	return db
 }
+
+func ParseRows(rows *sql.Rows) []map[string]interface{} {
+	columns, _ := rows.Columns()
+	scanArgs := make([]interface{}, len(columns))
+	values := make([]interface{}, len(columns))
+	for i := range scanArgs {
+		scanArgs[i] = &values[i]
+	}
+
+	record := make(map[string]interface{})
+	records := make([]map[string]interface{}, 0)
+	for rows.Next() {
+		err := rows.Scan(scanArgs...)
+		if err != nil {
+			fmt.Printf("scan result failed: %v\n", err)
+		}
+		for j, val := range values {
+			if val != nil {
+				record[columns[j]] = val
+			}
+		}
+		records = append(records, record)
+	}
+	return records
+}

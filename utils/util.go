@@ -4,11 +4,15 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
+
+const salt = "dd^&%$+"
 
 type Sha1Stream struct {
 	_sha1 hash.Hash
@@ -67,6 +71,12 @@ func GetFileSize(filename string) int64 {
 		return nil
 	})
 	return result
+}
+
+func GenToken(userName string) string {
+	// MD5(username + timestamp + salt) + timestamp[:8]
+	ts := fmt.Sprintf("%x", time.Now().Unix())
+	return MD5([]byte(userName + ts + salt)) + ts[:8]
 }
 
 
