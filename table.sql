@@ -1,3 +1,4 @@
+-- 唯一文件表
 CREATE TABLE `tbl_file` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `file_sha1` char(40) NOT NULL DEFAULT '' COMMENT '文件hash值',
@@ -14,6 +15,7 @@ CREATE TABLE `tbl_file` (
     KEY `idx_status` (`status`)
 )ENGINE = InnoDB DEFAULT CHARSET = utf8;
 
+-- 用户信息表
 CREATE TABLE `tbl_user` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `user_name` varchar(64) NOT NULL DEFAULT '' COMMENT '用户名',
@@ -31,10 +33,26 @@ CREATE TABLE `tbl_user` (
     KEY `idx_status` (`status`)
 )ENGINE = InnoDB AUTO_INCREMENT = 5 DEFAULT CHARSET = utf8mb4;
 
+-- 用户token对应表
 CREATE TABLE `tbl_user_token` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `user_name` varchar(64) NOT NULL DEFAULT '' COMMENT '用户名',
     `user_token` char(40) NOT NULL DEFAULT '' COMMENT '用户登录token',
     PRIMARY KEY (`id`),
     UNIQUE KEY (`user_name`)
+)ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- 创建用户文件表
+create table `tbl_user_file` (
+    `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `user_name` varchar(64) NOT NULL,
+    `file_sha1` varchar(64) DEFAULT '' COMMENT '文件Hash值',
+    `file_size` bigint(20) DEFAULT 0 COMMENT '文件大小',
+    `file_name` varchar(64) DEFAULT '' COMMENT '文件名',
+    `upload_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '文件上传时间',
+    `last_update` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+    `status` int(11) NOT NULL DEFAULT 0 COMMENT '文件状态(正常/已删除/禁用)',
+    UNIQUE KEY `idx_user_file` (`user_name`, `file_sha1`),
+    KEY `idx_status` (`status`),
+    KEY `idx_user_id` (`user_name`)
 )ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"FILESTORE-SERVER/db"
 	"FILESTORE-SERVER/meta"
 	"FILESTORE-SERVER/utils"
 	"encoding/json"
@@ -25,7 +26,9 @@ func UploadHandler(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, string(file))
 	} else if req.Method == "POST" {
 		// do upload file logic.
+		req.ParseForm()
 		file, header, err := req.FormFile("file")
+		userName := req.Form.Get("username")
 		if err != nil {
 			fmt.Printf("Failed to get uploaded file data, err: %v\n", err)
 			return
@@ -45,7 +48,7 @@ func UploadHandler(w http.ResponseWriter, req *http.Request) {
 		fileMeta.FileSize, err = io.Copy(newFile, file)
 		newFile.Seek(0, 0)
 		fileMeta.FileSha1 = utils.FileSha1(newFile)
-		log.Printf("Save file with hash: %v", fileMeta.FileSha1)
+		log.Printf("%v Upload file with hash: %v", time.Now().Format("2006-01-02 15:04:05"), fileMeta.FileSha1)
 		//meta.UpdateFileMeta(fileMeta)
 		result := meta.UpdateFileMetaDB(fileMeta)
 		if !result {
@@ -54,8 +57,14 @@ func UploadHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		if err != nil {
 			fmt.Printf("Failed to save data to new file, err: %v\n",  err)
+			return
 		}
-		http.Redirect(w, req, "/file/upload/suc", http.StatusFound)
+		result = db.OnUserFileUploadFinish(userName, fileMeta.FileName, fileMeta.FileSha1, fileMeta.FileSize)
+		if result {
+			http.Redirect(w, req, "/static/view/home.html", http.StatusFound)
+		} else {
+			fmt.Println("Upload user file error, please check log.")
+		}
 	}
 }
 
