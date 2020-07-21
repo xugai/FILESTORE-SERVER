@@ -6,6 +6,7 @@ import (
 	"FILESTORE-SERVER/utils"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
+	"log"
 	"math"
 	"net/http"
 	"os"
@@ -16,7 +17,8 @@ import (
 )
 
 const (
-	tmpStoreDir = "/Users/behe/Desktop/work_station/FILESTORE-SERVER/"
+	tmpStoreDir = "/Users/behe/Desktop/work_station/FILESTORE-SERVER/tmp/"
+	chunkSize = 1024 * 1024
 )
 
 type MultipartUploadInfo struct {
@@ -25,6 +27,12 @@ type MultipartUploadInfo struct {
 	FileSize int
 	ChunkSize int
 	ChunkCount int
+}
+
+func init() {
+	if err := os.MkdirAll("/Users/behe/Desktop/work_station/FILESTORE-SERVER/tmp/", 0744); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func InitialMultipartUploadHandler(w http.ResponseWriter, req *http.Request) {
@@ -40,15 +48,22 @@ func InitialMultipartUploadHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	//2. 尝试获取一个redis连接
-	connectionPool := cacheLayer.GetRedisConnectionPool()
-	defer connectionPool.Close()
+	connectionPool, err := cacheLayer.GetRedisConnectionPool()
+	if err != nil {
+		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		return
+	}
+
 	//3. 构造初始化信息
+	tmpResult := float64(fileSize) / chunkSize  // golang中也存在隐式转换
 	multipartUploadInfo := MultipartUploadInfo{
 		UploadID: userName + fmt.Sprintf("%x", time.Now().UnixNano()),
 		FileHash: fileHash,
 		FileSize: fileSize,
-		ChunkSize: 5 * 1024 * 1024,
-		ChunkCount: int(math.Ceil(float64(fileSize) / 5 * 1024 * 1024)),
+		ChunkSize: chunkSize,
+		ChunkCount: int(math.Ceil(tmpResult)),
 	}
 	//4. 将初始化信息存储进redis
 	conn := connectionPool.Get()
@@ -66,35 +81,34 @@ func UploadChunkFileHandler(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	uploadId := req.Form.Get("uploadid")
 	chkIndex := req.Form.Get("index")
-	//todo chkHash用来检查此次上传的分块文件与客户端本地上传的文件内容的一致性，以防在网络传输过程中被人篡改
-	chkHash := req.Form.Get("chkhash")
 	//2. 获得redis连接
-	connectionPool := cacheLayer.GetRedisConnectionPool()
+	connectionPool, err := cacheLayer.GetRedisConnectionPool()
+	if err != nil {
+		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		return
+	}
 	conn := connectionPool.Get()
-	defer connectionPool.Close()
 	defer conn.Close()
 	//3. 本地创建相应的(分块)文件句柄，用来持久化此次客户端上传的分块文件内容
-	os.MkdirAll(tmpStoreDir + uploadId + "/", 0744)
-	file, err := os.Create(tmpStoreDir + uploadId + "/chk_" + chkIndex)
+	fPath := tmpStoreDir + uploadId + "/" + chkIndex
+	os.MkdirAll(path.Dir(fPath), 0744)
+	file, err := os.Create(fPath)
 	if err != nil {
 		fmt.Printf("Create tmp chunk file store location failed: %v\n", err)
 		w.Write(utils.NewSimpleServerResponse(500, "创建临时分块文件存储文件失败!").GetInByteStream())
 		return
 	}
+	defer file.Close()
 	buf := make([]byte, 1024 * 1024) // 1MB
 	for {
-		n, err := req.Body.Read(buf)
+		n, err := req.Body.Read(buf)  // 读到文件最后结束时会遇到EOF，于是会抛出err
 		file.Write(buf[:n])
 		if err != nil {
 			fmt.Printf("Read content from request body failed: %v\n", err)
 			break
 		}
-	}
-	//todo 检查文件内容一致性
-	if utils.FileSha1(file) != chkHash {
-		fmt.Printf("Seems the chunk file was tampered, please take further check!")
-		w.Write(utils.NewSimpleServerResponse(400, "本次上传的文件疑似被篡改，请重试!").GetInByteStream())
-		return
 	}
 	//4. 更新缓存中此次分块文件所对应的分块上传信息
 	conn.Do("HSET", "MP_" + uploadId, "chkidx_" + chkIndex, 1)
@@ -111,9 +125,14 @@ func CompleteUploadHandler(w http.ResponseWriter, req *http.Request) {
 	fileSize, _ := strconv.Atoi(req.Form.Get("filesize"))
 	fileName := req.Form.Get("filename")
 	//2. 获取连接池的连接，取出upload id对应的所有文件上传信息
-	connectionPool := cacheLayer.GetRedisConnectionPool()
+	connectionPool, err := cacheLayer.GetRedisConnectionPool()
+	if err != nil {
+		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		return
+	}
 	conn := connectionPool.Get()
-	defer connectionPool.Close()
 	defer conn.Close()
 	data, err :=  redis.Values(conn.Do("HGETALL", "MP_"+uploadId))
 	if err != nil {
@@ -128,7 +147,7 @@ func CompleteUploadHandler(w http.ResponseWriter, req *http.Request) {
 		v := string(data[i + 1].([]byte))
 		if k == "chunkcount" {
 			exceptCount, _ = strconv.Atoi(v)
-		} else if strings.HasPrefix("chkidx_", k) && v == "1"{
+		} else if strings.HasPrefix(k, "chkidx_") && v == "1"{
 			actualCount++
 		}
 	}

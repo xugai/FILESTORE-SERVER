@@ -9,8 +9,9 @@ import (
 var (
 	connectionPool *redis.Pool
 	network = "tcp"
-	host = "127.0.0.1:6379"
+	host = "127.0.0.1:6333"
 	pwd = "root"
+	initialErr error
 )
 
 func newConnectionPool() *redis.Pool {
@@ -23,12 +24,14 @@ func newConnectionPool() *redis.Pool {
 			//1, 尝试与redis server建立连接
 			if err != nil {
 				fmt.Printf("Connect to redis error: %v\n", err)
+				initialErr = err
 				return nil, err
 			}
 			//2, 访问认证
 			if _, err = conn.Do("AUTH", pwd); err != nil {
 				fmt.Printf("验证密码失败，请重试!")
 				conn.Close()
+				initialErr = err
 				return nil, err
 			}
 			return conn, nil
@@ -38,6 +41,7 @@ func newConnectionPool() *redis.Pool {
 				return nil
 			}
 			_, err := c.Do("PING")
+			initialErr = err
 			return err
 		},
 	}
@@ -47,6 +51,6 @@ func init() {
 	connectionPool = newConnectionPool()
 }
 
-func GetRedisConnectionPool() *redis.Pool {
-	return connectionPool
+func GetRedisConnectionPool() (*redis.Pool, error) {
+	return connectionPool, initialErr
 }

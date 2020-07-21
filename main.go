@@ -29,6 +29,14 @@ func main() {
 	// 秒传接口
 	http.HandleFunc("/file/fastupload", handler.HTTPInterceptor(handler.TryFastUploadHandler))
 
+	// 初始化分块上传接口
+	http.HandleFunc("/file/mpupload/init", handler.InitialMultipartUploadHandler)
+	// 分块上传接口
+	http.HandleFunc("/file/mpupload/uppart", handler.UploadChunkFileHandler)
+	// 完成分块上传接口
+	http.HandleFunc("/file/mpupload/complete", handler.CompleteUploadHandler)
+
+
 	http.HandleFunc("/user/signup", handler.SignupHandler)
 	http.HandleFunc("/user/signin", handler.SigninHandler)
 	http.HandleFunc("/user/info", handler.HTTPInterceptor(handler.UserInfoHandler))
