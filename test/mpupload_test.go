@@ -36,9 +36,12 @@ func TestMpUpload(t *testing.T) {
 	// 1.1 获得服务端返回回来的upload id与chunk size
 	uploadId := jsoniter.Get(body, "Data").Get("UploadID").ToString()
 	chunkSize := jsoniter.Get(body, "Data").Get("ChunkSize").ToInt()
+	get := jsoniter.Get(body, "Data").Get("ChunkExists")
+	fmt.Println(get)
 	fmt.Printf("Get uploadId: %v, chunkSize: %v\n", uploadId, chunkSize)
 
 	//2. 测试文件分块上传接口
+	// if len(get) > 0 ---> ResumeBreakpoint(uploadId, chunkSize, get)
 	err = UpMultipart(uploadId, chunkSize)
 	if err != nil {
 		t.Fatal(err)

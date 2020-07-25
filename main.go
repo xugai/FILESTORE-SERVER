@@ -35,7 +35,8 @@ func main() {
 	http.HandleFunc("/file/mpupload/uppart", handler.UploadChunkFileHandler)
 	// 完成分块上传接口
 	http.HandleFunc("/file/mpupload/complete", handler.CompleteUploadHandler)
-
+	// 取消文件上传接口
+	http.HandleFunc("/file/mpupload/cancel", handler.CancelUploadHandler)
 
 	http.HandleFunc("/user/signup", handler.SignupHandler)
 	http.HandleFunc("/user/signin", handler.SigninHandler)
