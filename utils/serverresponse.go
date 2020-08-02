@@ -20,7 +20,7 @@ func NewServerResponse(c int, m string, d interface{}) *ServerResponse {
 }
 
 func (sr *ServerResponse) GetInByteStream() []byte {
-	bytes, err := json.Marshal(sr)
+	bytes, err := json.Marshal(sr) // seems json.Marshal can not process nested struct object?
 	if err != nil {
 		log.Fatal("Json serialized error: ", err)
 	}

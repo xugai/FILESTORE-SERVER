@@ -197,4 +197,3 @@ func TryFastUploadHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(utils.NewSimpleServerResponse(200, "文件秒传上传成功!").GetInByteStream())
 	w.WriteHeader(http.StatusOK)
 }
-

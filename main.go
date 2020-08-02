@@ -25,7 +25,7 @@ func main() {
 	http.HandleFunc("/file/download", handler.FileDownloadHandler)
 	http.HandleFunc("/file/update", handler.FileMetaUpdateHandler)
 	http.HandleFunc("/file/delete", handler.FileMetaDeleteHandler)
-
+	http.HandleFunc("/file/downloadurl", handler.DownloadURLHandler)
 	// 秒传接口
 	http.HandleFunc("/file/fastupload", handler.HTTPInterceptor(handler.TryFastUploadHandler))
 

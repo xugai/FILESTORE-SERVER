@@ -1,4 +1,4 @@
-package test
+package mpupload
 
 import (
 	"fmt"
@@ -16,6 +16,14 @@ const (
 	fileSize = "4910254"
 	fileName = "06753103-B569-4AE8-B282-8FFD94C98730.jpeg"
 )
+
+func convertInterfaceArrToIntArr(interfaceArr []interface{}) []int {
+	var intArr []int
+	for i := 0; i < len(interfaceArr); i++ {
+		intArr = append(intArr, int(interfaceArr[i].(float64)))
+	}
+	return intArr
+}
 
 func TestMpUpload(t *testing.T) {
 
@@ -36,13 +44,20 @@ func TestMpUpload(t *testing.T) {
 	// 1.1 获得服务端返回回来的upload id与chunk size
 	uploadId := jsoniter.Get(body, "Data").Get("UploadID").ToString()
 	chunkSize := jsoniter.Get(body, "Data").Get("ChunkSize").ToInt()
-	get := jsoniter.Get(body, "Data").Get("ChunkExists")
-	fmt.Println(get)
+	chunkExists := convertInterfaceArrToIntArr(
+							jsoniter.Get(body, "Data").
+							Get("ChunkExists").
+							GetInterface().([]interface{}))
 	fmt.Printf("Get uploadId: %v, chunkSize: %v\n", uploadId, chunkSize)
 
 	//2. 测试文件分块上传接口
-	// if len(get) > 0 ---> ResumeBreakpoint(uploadId, chunkSize, get)
-	err = UpMultipart(uploadId, chunkSize)
+	//2.1 如果已上传的分块数量为0，则说明之前从未上传过，因此这次是分块上传
+	//2.2 否则这次就是断点续传
+	if len(chunkExists) == 0 {
+		err = UpMultipart(uploadId, chunkSize)
+	} else if len(chunkExists) > 0 {
+		err = ResumeBreakpoint(uploadId, chunkSize, chunkExists)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

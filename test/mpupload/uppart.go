@@ -1,4 +1,4 @@
-package test
+package mpupload
 
 import (
 	"FILESTORE-SERVER/utils"
