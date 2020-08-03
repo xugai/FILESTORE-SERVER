@@ -9,9 +9,9 @@ var ossCli *oss.Client
 // LTAI4GBwyJYXh2NWRpBr9fp8  S0cOobEbehrkpMSCXSoqYzwRqmhCT7
 const (
 	ossEndpoint = "oss-cn-shenzhen.aliyuncs.com"
-	accessKeyID = "LTAI4GBwyJYXh2NWRpBr9fp8"
-	accessSecret = "S0cOobEbehrkpMSCXSoqYzwRqmhCT7"
-	bucketName = "filestoreserver"
+	accessKeyID = ""
+	accessSecret = ""
+	bucketName = ""
 )
 
 func Client() *oss.Client {
