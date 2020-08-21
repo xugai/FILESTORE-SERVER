@@ -51,3 +51,18 @@ func GetFileMeta(filehash string) (*TableFile, error) {
 	}
 	return tableFile, nil
 }
+
+func UpdateFileStoreLocation(fileHash, fileAddr string) bool {
+	prepare, err := mysql.GetDBConnection().Prepare("update tbl_file set file_addr = ? where file_sha1 = ?")
+	if err != nil {
+		fmt.Printf("Get prepare statement failed: %v\n", err)
+		return false
+	}
+	defer prepare.Close()
+	_, err = prepare.Exec(fileAddr, fileHash)
+	if err != nil {
+		fmt.Printf("Execute prepare statement failed: %v\n", err)
+		return false
+	}
+	return true
+}

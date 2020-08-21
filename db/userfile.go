@@ -52,3 +52,44 @@ func GetUserFileMetas(userName string, limit int) ([]UserFile, error) {
 	}
 	return userFiles, nil
 }
+
+func GetUserFileMeta(userName string, fileHash string) (*UserFile, error) {
+	prepare, err := mysql.GetDBConnection().Prepare("select file_sha1, file_size, file_name, upload_at, last_update " +
+		"from tbl_user_file where user_name = ? and file_sha1 = ?")
+	if err != nil {
+		fmt.Printf("Prepare statement failed: %v\n", err)
+		return nil, err
+	}
+	defer prepare.Close()
+	userFile := new(UserFile)
+	err = prepare.QueryRow(userName, fileHash).Scan(&userFile.UserName,
+		&userFile.FileName,
+		&userFile.FileHash,
+		&userFile.FileSize,
+		&userFile.UploadAt,
+		&userFile.LastUpdate)
+	if err != nil {
+		fmt.Printf("Query file meta info failed: %v\n", err)
+	}
+	return userFile, nil
+}
+
+func UpdateUserFileMeta(userName string, fileHash string, newFileName string) bool {
+	prepare, err := mysql.GetDBConnection().Prepare("update tbl_user_file set file_name = ? where user_name = ?" +
+		" and file_sha1 = ? and status = 0")
+	if err != nil {
+		fmt.Printf("Prepare statement failed: %v\n", err)
+		return false
+	}
+	defer prepare.Close()
+	exec, err := prepare.Exec(newFileName, userName, fileHash)
+	if err != nil {
+		fmt.Printf("Update user file meta info failed: %v\n", err)
+		return false
+	}
+	if rowsAffected, err := exec.RowsAffected(); err == nil && rowsAffected == 1 {
+		return true
+	}
+	fmt.Printf("Update user file meta info failed: %v\n", err)
+	return false
+}

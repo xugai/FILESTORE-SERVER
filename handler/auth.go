@@ -5,6 +5,7 @@ package handler
 import (
 	"FILESTORE-SERVER/db"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"time"
@@ -35,5 +36,17 @@ func HTTPInterceptor(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		handlerFunc(w, req)
+	}
+}
+
+func IdentityMiddleware() gin.HandlerFunc{
+	return func(c *gin.Context) {
+		userName := c.Request.FormValue("username")
+		token := c.Request.FormValue("token")
+		if len(userName) < 3 || !ifTokenIsValid(userName, token) {
+			c.JSON(http.StatusForbidden, nil)
+			c.Abort()
+		}
+		c.Next()
 	}
 }

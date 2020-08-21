@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "proto";
+
+service UploadService{
+  rpc UploadEntry(reqUploadEntry) returns (respUploadEntry) {}  // 获取上传入口地址
+  rpc UploadFile(reqUploadFile) returns (respUploadFile) {}   // 标准文件上传
+}
+
+message reqUploadEntry {
+
+}
+
+message respUploadEntry {
+  int32 code = 1;
+  string message = 2;
+  string entry = 3;
+}
+
+message reqUploadFile {
+  string username = 1;
+  string filename = 2;
+  bytes filecontent = 3;
+}
+
+message respUploadFile {
+  int32 code = 1;
+  string message = 2;
+}
+

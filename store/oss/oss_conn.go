@@ -6,12 +6,12 @@ import (
 )
 
 var ossCli *oss.Client
-// LTAI4GBwyJYXh2NWRpBr9fp8  S0cOobEbehrkpMSCXSoqYzwRqmhCT7
+
 const (
 	ossEndpoint = "oss-cn-shenzhen.aliyuncs.com"
-	accessKeyID = ""
-	accessSecret = ""
-	bucketName = ""
+	accessKeyID = "LTAI4GJbXy7tLtD3mTdK7Ax8"
+	accessSecret = "Cnjgzm98AqHrVOgELLqCsipiYC1fmD"
+	bucketName = "filestoreserver"
 )
 
 func Client() *oss.Client {

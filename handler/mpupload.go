@@ -4,7 +4,9 @@ import (
 	cacheLayer "FILESTORE-SERVER/cache/redis"
 	"FILESTORE-SERVER/db"
 	"FILESTORE-SERVER/utils"
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"math"
@@ -38,16 +40,18 @@ func init() {
 	}
 }
 
-func InitialMultipartUploadHandler(w http.ResponseWriter, req *http.Request) {
+// 初始化分块上传接口
+func InitialMultipartUploadHandler(c *gin.Context) {
 	//1. 解析请求参数，包括文件哈希值、文件大小、用户名
-	req.ParseForm()
-	userName := req.Form.Get("username")
-	fileHash := req.Form.Get("filehash")
-	fileSize, err := strconv.Atoi(req.Form.Get("filesize"))
+	userName := c.Request.FormValue("username")
+	fileHash := c.Request.FormValue("filehash")
+	fileSize, err := strconv.Atoi(c.Request.FormValue("filesize"))
 	if err != nil {
-		fmt.Printf("Invalid request parameter: filesize, please check!")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.NewSimpleServerResponse(400, "请求参数非法，请检查").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg": "Invalid request parameter, please check log to get more details!",
+		})
+		log.Printf("Invalid request parameter: filesize, please check!")
 		return
 	}
 	//2. 尝试获取一个redis连接
@@ -55,9 +59,11 @@ func InitialMultipartUploadHandler(w http.ResponseWriter, req *http.Request) {
 	conn := connectionPool.Get()
 	defer conn.Close()
 	if err != nil {
-		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Try to multipart upload file failed, please check log to get more details!",
+		})
+		log.Printf("Get redis connection failed: %v, please check!\n", err)
 		return
 	}
 
@@ -91,6 +97,15 @@ func InitialMultipartUploadHandler(w http.ResponseWriter, req *http.Request) {
 		ChunkCount: int(math.Ceil(tmpResult)),
 		ChunkExists: chunkExists,
 	}
+	multipartUploadInfoJsonStr, err := json.Marshal(multipartUploadInfo)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Try to multipart upload file failed, please check log to get more details!",
+		})
+		log.Printf("%v\n", err)
+		return
+	}
 	if len(chunkExists) == 0 {
 		//4. 将初始化信息存储进redis，同时对每种信息的key值进行过期处理
 		hkey := "MP_" + multipartUploadInfo.UploadID
@@ -101,20 +116,22 @@ func InitialMultipartUploadHandler(w http.ResponseWriter, req *http.Request) {
 		conn.Do("SET", hashUpIdPrefixKey + fileHash, multipartUploadInfo.UploadID, "EX", 43200)
 	}
 	//5. 将此次操作成功的结果返回给客户端
-	w.Write(utils.NewServerResponse(200, "成功!", multipartUploadInfo).GetInByteStream())
+	c.Data(http.StatusOK, "application/json", multipartUploadInfoJsonStr)
 }
 
-func UploadChunkFileHandler(w http.ResponseWriter, req *http.Request) {
+// 分块上传接口
+func UploadChunkFileHandler(c *gin.Context) {
 	//1. 解析请求获得参数，包括uploadid，chunk index，chunk hash
-	req.ParseForm()
-	uploadId := req.Form.Get("uploadid")
-	chkIndex := req.Form.Get("index")
+	uploadId := c.Request.FormValue("uploadid")
+	chkIndex := c.Request.FormValue("index")
 	//2. 获得redis连接
 	connectionPool, err := cacheLayer.GetRedisConnectionPool()
 	if err != nil {
-		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Upload chunk file error, please check log to get more details",
+		})
+		log.Printf("Get redis connection failed: %v, please check!\n", err)
 		return
 	}
 	conn := connectionPool.Get()
@@ -124,14 +141,18 @@ func UploadChunkFileHandler(w http.ResponseWriter, req *http.Request) {
 	os.MkdirAll(path.Dir(fPath), 0744)
 	file, err := os.Create(fPath)
 	if err != nil {
-		fmt.Printf("Create tmp chunk file store location failed: %v\n", err)
-		w.Write(utils.NewSimpleServerResponse(500, "创建临时存储文件失败!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Upload chunk file error, please check log to get more details",
+		})
+		log.Printf("Create tmp chunk file store location failed: %v\n", err)
 		return
 	}
 	defer file.Close()
 	buf := make([]byte, chunkSize) // 1MB
 	for {
-		n, err := req.Body.Read(buf)  // 读到文件最后结束时会遇到EOF，于是会抛出err
+
+		n, err := c.Request.Body.Read(buf)  // 读到文件最后结束时会遇到EOF，于是会抛出err
 		file.Write(buf[:n])
 		if err != nil {
 			fmt.Printf("Read content from request body failed: %v\n", err)
@@ -141,31 +162,39 @@ func UploadChunkFileHandler(w http.ResponseWriter, req *http.Request) {
 	//4. 更新缓存中此次分块文件所对应的分块上传信息
 	conn.Do("HSET", "MP_" + uploadId, "chkidx_" + chkIndex, 1)
 	//5. 返回操作成功的信息
-	w.Write(utils.NewSimpleServerResponse(200, "分块文件上传成功!").GetInByteStream())
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg": "Upload chunk file succeed!",
+	})
 }
 
-func CompleteUploadHandler(w http.ResponseWriter, req *http.Request) {
+// 完成分块上传接口
+func CompleteUploadHandler(c *gin.Context) {
 	//1. 获取请求参数，包括upload id，username，filehash，filesize，filename
-	req.ParseForm()
-	uploadId := req.Form.Get("uploadid")
-	userName := req.Form.Get("username")
-	fileHash := req.Form.Get("filehash")
-	fileSize, _ := strconv.Atoi(req.Form.Get("filesize"))
-	fileName := req.Form.Get("filename")
+	uploadId := c.Request.FormValue("uploadid")
+	userName := c.Request.FormValue("username")
+	fileHash := c.Request.FormValue("filehash")
+	fileSize, _ := strconv.Atoi(c.Request.FormValue("filesize"))
+	fileName := c.Request.FormValue("filename")
 	//2. 获取连接池的连接，取出upload id对应的所有文件上传信息
 	connectionPool, err := cacheLayer.GetRedisConnectionPool()
 	if err != nil {
-		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Post operation failed after complete upload file, please check log!",
+		})
+		log.Printf("Get redis connection failed: %v, please check!\n", err)
 		return
 	}
 	conn := connectionPool.Get()
 	defer conn.Close()
 	data, err :=  redis.Values(conn.Do("HGETALL", "MP_"+uploadId))
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
-		w.Write(utils.NewSimpleServerResponse(500, "服务器内部发生错误，请检查日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Post operation failed after complete upload file, please check log!",
+		})
+		log.Printf("error: %v\n", err)
 		return
 	}
 	exceptCount := 0
@@ -180,27 +209,35 @@ func CompleteUploadHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	if exceptCount != actualCount {
-		fmt.Printf("The chunk file count are mismatch in two side!\n")
-		w.Write(utils.NewSimpleServerResponse(400, "请求参数不正确，请重试!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Post operation failed after complete upload file, please check log!",
+		})
+		log.Printf("The chunk file count are mismatch in two side!\n")
 		return
 	}
 	//3. 验证文件上传是否完整，如果确实上传完整，则对唯一文件表与用户文件表新插入一条记录
 	db.OnFileUploadFinished(fileHash, fileName, int64(fileSize), "")
 	db.OnUserFileUploadFinish(userName, fileName, fileHash, int64(fileSize))
 	//4. 返回操作成功信息
-	w.Write(utils.NewSimpleServerResponse(200, "上传合并分块文件成功!").GetInByteStream())
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg": "Post operation succeed!",
+	})
 }
 
-func CancelUploadHandler(w http.ResponseWriter, req *http.Request) {
+// 取消文件上传接口
+func CancelUploadHandler(c *gin.Context) {
 	//1. 解析请求参数，获得文件的哈希值
-	req.ParseForm()
-	fileHash := req.Form.Get("filehash")
+	fileHash := c.Request.FormValue("filehash")
 	//2. 根据文件哈希值查询缓存中是否存在相对应的upload id
 	connectionPool, err := cacheLayer.GetRedisConnectionPool()
 	if err != nil {
-		fmt.Printf("Get redis connection failed: %v, please check!\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.NewSimpleServerResponse(500, "服务内部发生异常错误，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Cancel upload failed, please check log to get more details",
+		})
+		log.Printf("Get redis connection failed: %v, please check!\n", err)
 		return
 	}
 	conn := connectionPool.Get()
@@ -208,23 +245,35 @@ func CancelUploadHandler(w http.ResponseWriter, req *http.Request) {
 	uploadId, err := redis.String(conn.Do("GET", hashUpIdPrefixKey+fileHash))
 	//2.1 如果没有，则返回相关提示信息
 	if err != nil || uploadId == "" {
-		fmt.Printf("Cancel upload file failed: %v, please check log.\n", err)
-		w.Write(utils.NewSimpleServerResponse(500, "取消文件上传失败，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Cancel upload failed, please check log to get more details",
+		})
+		log.Printf("Cancel upload file failed: %v, please check log.\n", err)
 		return
 	}
 	//2.2 如果有，则删除缓存中对应的信息，以及已上传的文件(删除指定目录)
 	_, delHashUpIdErr := conn.Do("DEL", hashUpIdPrefixKey+fileHash)
 	_, delInitialUpInfo := conn.Do("DEL", "MP_"+uploadId)
 	if delHashUpIdErr != nil || delInitialUpInfo != nil {
-		w.Write(utils.NewSimpleServerResponse(500, "取消文件上传失败，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Cancel upload failed, please check log to get more details",
+		})
 		log.Fatal(delHashUpIdErr)
 		log.Fatal(delInitialUpInfo)
 		return
 	}
 	execResult := utils.RemovePathByShell(tmpStoreDir + uploadId)
 	if !execResult {
-		w.Write(utils.NewSimpleServerResponse(500, "取消文件上传失败，请检查活动日志!").GetInByteStream())
+		c.JSON(http.StatusOK, gin.H{
+			"code": -2,
+			"msg": "Cancel upload failed, please check log to get more details",
+		})
 		return
 	}
-	w.Write(utils.NewSimpleServerResponse(200, "取消文件上传成功!").GetInByteStream())
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg": "Cancel upload succeed!",
+	})
 }
