@@ -6,6 +6,7 @@ service UserService {
   rpc Signup(ReqSignup) returns (RespSignup) {}  // 用户注册服务
   rpc Signin(ReqSignin) returns (RespSignin) {}  // 用户登录服务
   rpc UserInfo(ReqUserInfo) returns (RespUserInfo) {}   // 用户信息服务
+  rpc QueryFileMetas(ReqQueryFileMetas) returns (RespQueryFileMetas) {}  // 获取用户已上传文件服务
 }
 
 message ReqSignup {
@@ -42,4 +43,15 @@ message RespUserInfo {
   string signup = 6;
   string lastActiveAt = 7;
   int32 status = 8;
+}
+
+message ReqQueryFileMetas {
+  int32 limitCnt = 1;
+  string username = 2;
+}
+
+message RespQueryFileMetas {
+  int32 code = 1;
+  string msg = 2;
+  bytes fileMetas = 3;
 }

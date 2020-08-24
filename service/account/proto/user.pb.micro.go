@@ -45,6 +45,7 @@ type UserService interface {
 	Signup(ctx context.Context, in *ReqSignup, opts ...client.CallOption) (*RespSignup, error)
 	Signin(ctx context.Context, in *ReqSignin, opts ...client.CallOption) (*RespSignin, error)
 	UserInfo(ctx context.Context, in *ReqUserInfo, opts ...client.CallOption) (*RespUserInfo, error)
+	QueryFileMetas(ctx context.Context, in *ReqQueryFileMetas, opts ...client.CallOption) (*RespQueryFileMetas, error)
 }
 
 type userService struct {
@@ -89,12 +90,23 @@ func (c *userService) UserInfo(ctx context.Context, in *ReqUserInfo, opts ...cli
 	return out, nil
 }
 
+func (c *userService) QueryFileMetas(ctx context.Context, in *ReqQueryFileMetas, opts ...client.CallOption) (*RespQueryFileMetas, error) {
+	req := c.c.NewRequest(c.name, "UserService.QueryFileMetas", in)
+	out := new(RespQueryFileMetas)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for UserService service
 
 type UserServiceHandler interface {
 	Signup(context.Context, *ReqSignup, *RespSignup) error
 	Signin(context.Context, *ReqSignin, *RespSignin) error
 	UserInfo(context.Context, *ReqUserInfo, *RespUserInfo) error
+	QueryFileMetas(context.Context, *ReqQueryFileMetas, *RespQueryFileMetas) error
 }
 
 func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts ...server.HandlerOption) error {
@@ -102,6 +114,7 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		Signup(ctx context.Context, in *ReqSignup, out *RespSignup) error
 		Signin(ctx context.Context, in *ReqSignin, out *RespSignin) error
 		UserInfo(ctx context.Context, in *ReqUserInfo, out *RespUserInfo) error
+		QueryFileMetas(ctx context.Context, in *ReqQueryFileMetas, out *RespQueryFileMetas) error
 	}
 	type UserService struct {
 		userService
@@ -124,4 +137,8 @@ func (h *userServiceHandler) Signin(ctx context.Context, in *ReqSignin, out *Res
 
 func (h *userServiceHandler) UserInfo(ctx context.Context, in *ReqUserInfo, out *RespUserInfo) error {
 	return h.UserServiceHandler.UserInfo(ctx, in, out)
+}
+
+func (h *userServiceHandler) QueryFileMetas(ctx context.Context, in *ReqQueryFileMetas, out *RespQueryFileMetas) error {
+	return h.UserServiceHandler.QueryFileMetas(ctx, in, out)
 }

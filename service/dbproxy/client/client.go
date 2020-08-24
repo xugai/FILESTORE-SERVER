@@ -44,7 +44,7 @@ func TableFileToFileMeta(file mapper.TableFile) FileMeta {
 func execAction(name string, paramJson []byte) (*proto.RespExec, error) {
 	return dbCli.ExecuteAction(context.TODO(), &proto.ReqExec{
 		Action: []*proto.SingleAction{
-			&proto.SingleAction{
+			{
 				Name: name,
 				Params: paramJson,
 			},
@@ -64,7 +64,7 @@ func parseBody(resp *proto.RespExec) *mapper.ExecResult {
 		return nil
 	}
 	if len(results) > 0 {
-		return &results[0]
+		return &results[1]
 	}
 	return nil
 }
@@ -85,6 +85,12 @@ func ToTableUserFile(src interface{}) mapper.UserFile {
 	userFile := mapper.UserFile{}
 	mapstructure.Decode(src, &userFile)
 	return userFile
+}
+
+func ToTableUserFiles(src interface{}) []mapper.UserFile {
+	userFiles := []mapper.UserFile{}
+	mapstructure.Decode(src, &userFiles)
+	return userFiles
 }
 
 func GetFileMeta(filehash string) (*mapper.ExecResult, error){
@@ -134,5 +140,31 @@ func IfTokenIsValid(username string, token string) (*mapper.ExecResult, error) {
 	respExec, err := execAction("/user/IfTokenIsValid", bytes)
 	return parseBody(respExec), err
 }
+
+func OnUserFileUploadFinish(userName string, fileName string, fileHash string, fileSize int64) (*mapper.ExecResult, error) {
+	bytes, _ := json.Marshal([]interface{}{userName, fileName, fileHash, fileSize})
+	respExec, err := execAction("/ufile/OnUserFileUploadFinish", bytes)
+	return parseBody(respExec), err
+}
+
+func GetUserFileMetas(userName string, limit int) (*mapper.ExecResult, error) {
+	bytes, _ := json.Marshal([]interface{}{userName, limit})
+	respExec, err := execAction("/ufile/GetUserFileMetas", bytes)
+	return parseBody(respExec), err
+}
+
+func GetUserFileMeta(userName string, fileHash string) (*mapper.ExecResult, error) {
+	bytes, _ := json.Marshal([]interface{}{userName, fileHash})
+	respExec, err := execAction("/ufile/GetUserFileMeta", bytes)
+	return parseBody(respExec), err
+}
+
+func UpdateUserFileMeta(userName string, fileHash string, newFileName string) (*mapper.ExecResult, error) {
+	bytes, _ := json.Marshal([]interface{}{userName, fileHash, newFileName})
+	respExec, err := execAction("/ufile/UpdateUserFileMeta", bytes)
+	return parseBody(respExec), err
+}
+
+
 
 

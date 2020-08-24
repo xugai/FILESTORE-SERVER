@@ -35,7 +35,7 @@ func (d *DBProxy) ExecuteAction(ctx context.Context, req *proto.ReqExec, resp *p
 		if err != nil {
 			results[idx] = mapper.ExecResult{
 				Code: -2,
-				Message: "函数远端rpc调用失败!",
+				Message: "dbproxy service - 服务端rpc调用失败!",
 			}
 			continue
 		}

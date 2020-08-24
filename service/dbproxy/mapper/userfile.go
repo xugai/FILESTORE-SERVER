@@ -31,7 +31,7 @@ func OnUserFileUploadFinish(userName string, fileName string, fileHash string, f
 	}
 }
 
-func GetUserFileMetas(userName string, limit int) ExecResult {
+func GetUserFileMetas(userName string, limit int64) ExecResult {
 	prepare, err := conn.DBConn().Prepare("select file_sha1, file_size, file_name, upload_at, last_update " +
 		"from tbl_user_file where user_name = ? and status = 0 limit ?")
 	if err != nil {

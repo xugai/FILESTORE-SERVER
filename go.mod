@@ -9,6 +9,7 @@ require (
 	github.com/coreos/etcd v3.3.22+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-log/log v0.2.0 // indirect
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
@@ -29,9 +30,8 @@ require (
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/micro/go-plugins v1.5.1 // indirect
 	github.com/micro/go-plugins/registry/consul/v2 v2.9.1
-	github.com/micro/micro v1.18.0 // indirect
 	github.com/miekg/dns v1.1.31 // indirect
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/mitchellh/mapstructure v1.3.3
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/nats-io/jwt v1.0.1 // indirect

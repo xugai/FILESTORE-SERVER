@@ -3,6 +3,7 @@ package conn
 import (
 	"FILESTORE-SERVER/service/dbproxy/config"
 	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"os"
 )
