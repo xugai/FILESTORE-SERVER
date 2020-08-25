@@ -1,7 +1,7 @@
 package route
 
 import (
-	securitylayer "FILESTORE-SERVER/handler"
+	securityLayer "FILESTORE-SERVER/service/apigw/auth"
 	"FILESTORE-SERVER/service/apigw/handler"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -9,7 +9,7 @@ import (
 
 func Router() *gin.Engine {
 	router := gin.Default()
-	// todo 也就是说，通过ide开启路由跟通过命令行开启路由，前者因为相对路径的缘故因此可以索引到静态资源文件；或者此时就无法索引到了
+	// todo 也就是说，通过ide开启路由跟通过命令行开启路由，前者因为相对路径的缘故因此可以索引到静态资源文件；后者此时就无法索引到了
 	router.Static("/static/", "./static")
 	router.GET("/user/signup", handler.SignupHandler)
 	router.POST("/user/signup", handler.SignupPostHandler)
@@ -25,7 +25,7 @@ func Router() *gin.Engine {
 		ExposeHeaders: []string{"Content-Length", "Accept-Ranges", "Content-Range", "Content-Disposition"},
 	}))
 	// 使用鉴权中间件
-	router.Use(securitylayer.IdentityMiddleware())
+	router.Use(securityLayer.IdentityMiddleware())
 
 	router.POST("/file/query", handler.QueryFileMetasHandler)
 	return router

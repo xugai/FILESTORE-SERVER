@@ -69,6 +69,12 @@ func parseBody(resp *proto.RespExec) *mapper.ExecResult {
 	return nil
 }
 
+func ToFileMeta(src interface{}) FileMeta {
+	fileMeta := FileMeta{}
+	mapstructure.Decode(src, &fileMeta)
+	return fileMeta
+}
+
 func ToTableUser(src interface{}) mapper.User {
 	user := mapper.User{}
 	mapstructure.Decode(src, &user)

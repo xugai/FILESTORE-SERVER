@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "proto";
+
+service DownloadService {
+  rpc DownloadURL(reqDownloadURL) returns (respDownloadURL);
+}
+
+message reqDownloadURL {
+  string filehash = 1;
+}
+
+message respDownloadURL {
+  int32 code = 1;
+  string msg = 2;
+  string url = 3;
+}
