@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client/grpc"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-plugins/registry/consul/v2"
 	"io/ioutil"
@@ -20,8 +21,9 @@ func init() {
 	newService := micro.NewService(
 		micro.Registry(newRegistry),
 	)
-	newService.Init()
-	uploadCli = proto.NewUploadService("go.micro.service.upload", newService.Client())
+	c := newService.Client()
+	c.Init(grpc.MaxSendMsgSize(10 * 1024 * 1024))
+	uploadCli = proto.NewUploadService("go.micro.service.upload", c)
 }
 
 func UploadHandler(c *gin.Context) {

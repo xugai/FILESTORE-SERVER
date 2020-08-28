@@ -1,8 +1,10 @@
 package main
 
 import (
+	"FILESTORE-SERVER/service/download/config"
 	"FILESTORE-SERVER/service/download/handler"
 	"FILESTORE-SERVER/service/download/proto"
+	"FILESTORE-SERVER/service/download/route"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-plugins/registry/consul/v2"
@@ -22,6 +24,12 @@ func startupDownloadService() {
 	}
 }
 
+func startupDownloadServiceClient() {
+	router := route.Router()
+	router.Run(config.DownloadServiceHost)
+}
+
 func main() {
-	startupDownloadService()
+	go startupDownloadServiceClient() // 开启 download service rpc client
+	startupDownloadService() // 开启 download service rpc server
 }

@@ -9,8 +9,8 @@ var ossCli *oss.Client
 
 const (
 	ossEndpoint = "oss-cn-shenzhen.aliyuncs.com"
-	accessKeyID = "LTAI4GJbXy7tLtD3mTdK7Ax8"
-	accessSecret = "Cnjgzm98AqHrVOgELLqCsipiYC1fmD"
+	accessKeyID = ""
+	accessSecret = ""
 	bucketName = "filestoreserver"
 )
 
