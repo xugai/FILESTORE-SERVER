@@ -64,7 +64,7 @@ func parseBody(resp *proto.RespExec) *mapper.ExecResult {
 		return nil
 	}
 	if len(results) > 0 {
-		return &results[1]
+		return &results[0]
 	}
 	return nil
 }

@@ -3,7 +3,6 @@ package route
 import (
 	securityLayer "FILESTORE-SERVER/service/apigw/auth"
 	"FILESTORE-SERVER/service/apigw/handler"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,7 +12,7 @@ func Router() *gin.Engine {
 	router.Static("/static/", "./static")
 
 	// 使用gin插件支持跨域请求
-	router.Use(cors.Default())
+	//router.Use(cors.Default())
 
 	router.GET("/user/signup", handler.SignupHandler)
 	router.POST("/user/signup", handler.SignupPostHandler)

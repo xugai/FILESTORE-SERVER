@@ -3,7 +3,18 @@ syntax = "proto3";
 option go_package = "proto";
 
 service DownloadService {
+  rpc DownloadEntry(reqDownloadEntry) returns (respDownloadEntry);
   rpc DownloadURL(reqDownloadURL) returns (respDownloadURL);
+}
+
+message reqDownloadEntry {
+
+}
+
+message respDownloadEntry {
+  int32 code = 1;
+  string msg = 2;
+  string entry = 3;
 }
 
 message reqDownloadURL {

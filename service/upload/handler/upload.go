@@ -50,6 +50,7 @@ func (u *Upload) UploadFile(ctx context.Context, req *proto.ReqUploadFile, resp 
 	}
 	newFile.Seek(0, 0)	// 游标重新回到文件头部
 	fileMeta.FileSha1 = utils.FileSha1(newFile)
+	fileMeta.FileSize = int64(n)
 	log.Printf("%v Upload file with hash: %v", time.Now().Format("2006-01-02 15:04:05"), fileMeta.FileSha1)
 
 	// 将文件以同步/异步的方式转移到公有云OSS上

@@ -76,6 +76,7 @@ func SigninPostHandler(c *gin.Context) {
 		return
 	}
 	uploadEntry, err := getUploadEntry()
+	downloadEntry, err := getDownloadEntry()
 	if err != nil {
 		log.Println(err)
 		return
@@ -87,11 +88,13 @@ func SigninPostHandler(c *gin.Context) {
 			Username string
 			Location string
 			UploadEntry string
+			DownloadEntry string
 		}{
 			Token: respSignin.Token,
 			Username: userName,
 			Location: "/static/view/home.html",
 			UploadEntry: uploadEntry,
+			DownloadEntry: downloadEntry,
 		},
 		"msg": respSignin.Message,
 	})
@@ -127,4 +130,12 @@ func getUploadEntry() (string, error) {
 		return "", err
 	}
 	return respUploadEntry.Entry, nil
+}
+
+func getDownloadEntry() (string, error) {
+	respDownloadEntry, err := downloadCli.DownloadEntry(context.TODO(), &downloadProto.ReqDownloadEntry{})
+	if err != nil {
+		return "", err
+	}
+	return respDownloadEntry.Entry, nil
 }

@@ -42,6 +42,7 @@ func NewDownloadServiceEndpoints() []*api.Endpoint {
 // Client API for DownloadService service
 
 type DownloadService interface {
+	DownloadEntry(ctx context.Context, in *ReqDownloadEntry, opts ...client.CallOption) (*RespDownloadEntry, error)
 	DownloadURL(ctx context.Context, in *ReqDownloadURL, opts ...client.CallOption) (*RespDownloadURL, error)
 }
 
@@ -57,6 +58,16 @@ func NewDownloadService(name string, c client.Client) DownloadService {
 	}
 }
 
+func (c *downloadService) DownloadEntry(ctx context.Context, in *ReqDownloadEntry, opts ...client.CallOption) (*RespDownloadEntry, error) {
+	req := c.c.NewRequest(c.name, "DownloadService.DownloadEntry", in)
+	out := new(RespDownloadEntry)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *downloadService) DownloadURL(ctx context.Context, in *ReqDownloadURL, opts ...client.CallOption) (*RespDownloadURL, error) {
 	req := c.c.NewRequest(c.name, "DownloadService.DownloadURL", in)
 	out := new(RespDownloadURL)
@@ -70,11 +81,13 @@ func (c *downloadService) DownloadURL(ctx context.Context, in *ReqDownloadURL, o
 // Server API for DownloadService service
 
 type DownloadServiceHandler interface {
+	DownloadEntry(context.Context, *ReqDownloadEntry, *RespDownloadEntry) error
 	DownloadURL(context.Context, *ReqDownloadURL, *RespDownloadURL) error
 }
 
 func RegisterDownloadServiceHandler(s server.Server, hdlr DownloadServiceHandler, opts ...server.HandlerOption) error {
 	type downloadService interface {
+		DownloadEntry(ctx context.Context, in *ReqDownloadEntry, out *RespDownloadEntry) error
 		DownloadURL(ctx context.Context, in *ReqDownloadURL, out *RespDownloadURL) error
 	}
 	type DownloadService struct {
@@ -86,6 +99,10 @@ func RegisterDownloadServiceHandler(s server.Server, hdlr DownloadServiceHandler
 
 type downloadServiceHandler struct {
 	DownloadServiceHandler
+}
+
+func (h *downloadServiceHandler) DownloadEntry(ctx context.Context, in *ReqDownloadEntry, out *RespDownloadEntry) error {
+	return h.DownloadServiceHandler.DownloadEntry(ctx, in, out)
 }
 
 func (h *downloadServiceHandler) DownloadURL(ctx context.Context, in *ReqDownloadURL, out *RespDownloadURL) error {

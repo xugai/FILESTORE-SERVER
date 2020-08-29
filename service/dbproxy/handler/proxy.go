@@ -13,7 +13,7 @@ type DBProxy struct {
 }
 
 func (d *DBProxy) ExecuteAction(ctx context.Context, req *proto.ReqExec, resp *proto.RespExec) error {
-	results := make([]mapper.ExecResult, len(req.Action))
+	var results []mapper.ExecResult
 	for idx, singleAction := range req.Action {
 		params := []interface{}{}
 		decoder := json.NewDecoder(bytes.NewReader(singleAction.Params))
