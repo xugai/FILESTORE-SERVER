@@ -32,6 +32,14 @@ func TransferFileToOSS(msg []byte) bool {
 	log.Printf("Succeed transfer file: %v to oss\n", transferData.FileHash)
 	// 上传OSS成功后，别忘了修改db中该文件的存储位置，应修改为在OSS中的存储位置
 	db.UpdateFileStoreLocation(transferData.FileHash, transferData.DestLocation)
+	//todo 不知是否要对留存在本地的文件删除掉，释放硬盘空间。 2020.09.03
+	//cmd := fmt.Sprintf("cd %s && rm ./%s", transferData.CurLocation, transferData.FileHash)
+	//executeResult, err := utils.ExecuteShell(cmd)
+	//if err != nil {
+	//	log.Printf("Remove temp file failed: %v\n", err)
+	//	return false
+	//}
+	//log.Printf("Remove temp file succeed: %s\n", executeResult)
 	return true
 }
 

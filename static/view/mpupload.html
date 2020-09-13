@@ -57,7 +57,7 @@
             File.prototype.webkitSlice ||
             File.prototype.mozSlice;
 
-        let defaultChunkSize = 1024 * 1024 * 5;
+        let defaultChunkSize = 1024 * 1024;     // 默认分块大小为1MB
         let defaultChunkCount = 0;
 
         let file = null;

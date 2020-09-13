@@ -20,8 +20,8 @@ func newConnectionPool() *redis.Pool {
 		MaxActive: 30,
 		IdleTimeout: 300 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			conn, err := redis.Dial(network, host)
 			//1, 尝试与redis server建立连接
+			conn, err := redis.Dial(network, host)
 			if err != nil {
 				fmt.Printf("Connect to redis error: %v\n", err)
 				initialErr = err

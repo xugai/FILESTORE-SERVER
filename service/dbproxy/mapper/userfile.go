@@ -62,7 +62,7 @@ func GetUserFileMetas(userName string, limit int64) ExecResult {
 }
 
 func GetUserFileMeta(userName string, fileHash string) ExecResult {
-	prepare, err := conn.DBConn().Prepare("select file_sha1, file_size, file_name, upload_at, last_update " +
+	prepare, err := conn.DBConn().Prepare("select user_name, file_sha1, file_size, file_name, upload_at, last_update " +
 		"from tbl_user_file where user_name = ? and file_sha1 = ?")
 	if err != nil {
 		fmt.Printf("Prepare statement failed: %v\n", err)
@@ -74,10 +74,11 @@ func GetUserFileMeta(userName string, fileHash string) ExecResult {
 	}
 	defer prepare.Close()
 	userFile := new(UserFile)
-	err = prepare.QueryRow(userName, fileHash).Scan(&userFile.UserName,
-		&userFile.FileName,
+	err = prepare.QueryRow(userName, fileHash).Scan(
+		&userFile.UserName,
 		&userFile.FileHash,
 		&userFile.FileSize,
+		&userFile.FileName,
 		&userFile.UploadAt,
 		&userFile.LastUpdate)
 	if err != nil {

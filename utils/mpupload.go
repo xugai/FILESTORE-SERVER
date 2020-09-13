@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -25,4 +26,18 @@ func RemovePathByShell(targetDir string) bool {
 		return false
 	}
 	return true
+}
+
+// 执行shell命令
+func ExecuteShell(s string) (string, error) {
+	// 函数返回一个io.Writer类型的*cmd
+	cmd := exec.Command("/bin/bash", "-c", s)
+	var result bytes.Buffer
+	cmd.Stdout = &result
+	// 执行cmd命令，期间会阻塞直至完成
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return result.String(), nil
 }

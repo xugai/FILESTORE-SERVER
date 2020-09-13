@@ -2,9 +2,9 @@ package handler
 
 import (
 	"FILESTORE-SERVER/common"
-	"FILESTORE-SERVER/db"
 	"FILESTORE-SERVER/meta"
 	"FILESTORE-SERVER/mq"
+	dbCli "FILESTORE-SERVER/service/dbproxy/client"
 	"FILESTORE-SERVER/service/upload/config"
 	"FILESTORE-SERVER/service/upload/proto"
 	"FILESTORE-SERVER/store/oss"
@@ -14,6 +14,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -24,6 +25,28 @@ func (u *Upload) UploadEntry(ctx context.Context, req *proto.ReqUploadEntry, res
 	resp.Code = 0
 	resp.Message = "OK"
 	resp.Entry = config.UploadEntry
+	return nil
+}
+
+func (u *Upload) UpdateFileMeta(ctx context.Context, req *proto.ReqUpdateFileMeta, resp *proto.RespUpdateFileMeta) error {
+	userName := req.Username
+	filehash := req.Filehash
+	newFileName := req.Newfilename
+
+	execResult, err := dbCli.UpdateUserFileMeta(userName, filehash, newFileName)
+	if err != nil {
+		resp.Code = -2
+		resp.Msg = "File meta info update failed, please check log to get more details!"
+		log.Println(err)
+		return err
+	}
+	if !execResult.Suc {
+		resp.Code = -2
+		resp.Msg = "File meta info update failed, please check log to get more details!"
+		return nil
+	}
+	resp.Code = 0
+	resp.Msg = "Succeed"
 	return nil
 }
 
@@ -89,31 +112,59 @@ func (u *Upload) UploadFile(ctx context.Context, req *proto.ReqUploadFile, resp 
 			}
 		}
 	}
-
-	result := meta.UpdateFileMetaDB(fileMeta)
-	if !result {
-		resp.Code = -2
-		resp.Message = "Upload file failed, please check log to get more details!"
-		log.Printf("Update or insert file meta in DB error, please check.\n")
-		return errors.New("Update or insert file meta in DB error, please check")
-	}
+	_, err = dbCli.OnFileUploadFinished(fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize, strconv.Itoa(int(fileMeta.FileSize)))
 	if err != nil {
 		resp.Code = -2
 		resp.Message = "Upload file failed, please check log to get more details!"
-		log.Printf("Failed to save data to new file, err: %v\n",  err)
+		log.Println(err)
 		return err
 	}
-	result = db.OnUserFileUploadFinish(req.Username, fileMeta.FileName, fileMeta.FileSha1, fileMeta.FileSize)
-	if result {
+	_, err = dbCli.OnUserFileUploadFinish(req.Username, fileMeta.FileName, fileMeta.FileSha1, fileMeta.FileSize)
+	if err == nil {
 		resp.Code = 0
 		resp.Message = "Upload file succeed!"
 		return nil
 	} else {
 		resp.Code = -2
 		resp.Message = "Upload file failed"
-		return errors.New("Upload file failed, please check log to get more details!")
+		return err
 	}
 
+}
+
+func (u *Upload) FastUpload(ctx context.Context, req *proto.ReqFastUpload, resp *proto.RespFastUpload) error {
+	userName := req.Username
+	fileHash := req.Filehash
+	fileName := req.Filename
+	fileSize := req.Filesize
+	fileMeta, err := dbCli.GetFileMeta(fileHash)
+	if err != nil {
+		resp.Code = -2
+		resp.Msg = "Fast upload file error, please check log to get more details!"
+		log.Println(err)
+		return err
+	}
+	if fileMeta == nil {
+		resp.Code = -1
+		resp.Msg = "Fast upload file error, please check log to get more details!"
+		log.Println("This file have never been uploaded before, consider use common upload.")
+		return errors.New("This file have never been uploaded before, consider use common upload.")
+	}
+	onUserFileUploadFinish, err := dbCli.OnUserFileUploadFinish(userName, fileName, fileHash, fileSize)
+	if err != nil {
+		resp.Code = -2
+		resp.Msg = "Fast upload file error, please check log to get more details!"
+		log.Println(err)
+		return err
+	}
+	if onUserFileUploadFinish.Suc {
+		resp.Code = 0
+		resp.Msg = "Succeed"
+		return nil
+	}
+	resp.Code = -2
+	resp.Msg = "Fast upload file error, please check log to get more details!"
+	return nil
 }
 
 

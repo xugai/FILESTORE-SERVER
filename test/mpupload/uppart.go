@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	fileToUpload = "/Users/behe/Desktop/work_station/FILESTORE-SERVER/file/06753103-B569-4AE8-B282-8FFD94C98730.jpeg"
+	fileToUpload = "/Users/behe/Desktop/work_station/FILESTORE-SERVER/file/BAEE.jpg"
 )
 
 // 正常的客户端分块上传逻辑
@@ -61,7 +61,7 @@ func UpMultipart(uploadId string, chunkSize int) error {
 
 				chkHash := utils.Sha1(b)
 				response, err := http.Post(
-					"http://localhost:8080/file/mpupload/uppart?username=admin&uploadid="+uploadId+"&index="+strconv.Itoa(index)+"&chkhash="+chkHash,
+					"http://localhost:28080/file/mpupload/uppart?username=admin&uploadid="+uploadId+"&index="+strconv.Itoa(index)+"&chkhash="+chkHash,
 					"multipart/form-data",
 					bytes.NewReader(b))
 				if err != nil {

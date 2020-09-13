@@ -12,8 +12,14 @@ func Router() *gin.Engine {
 	router := gin.Default()
 
 	router.Static("/static/", "./static")
-	router.Use(cors.Default())  // 用于跨域访问
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Range", "x-requested-with", "content-Type"},
+		ExposeHeaders: []string{"Content-Length", "Accept-Ranges", "Content-Range", "Content-Disposition"},
+	}))
+	router.POST("/file/download", client.DownloadFileHandler)
 	router.POST("/file/downloadurl", client.DownloadURLHandler)
-
+	router.GET("/file/download/range", client.RangeDownloadHandler)
 	return router
 }

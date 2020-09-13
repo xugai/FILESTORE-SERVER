@@ -44,6 +44,7 @@ func NewDownloadServiceEndpoints() []*api.Endpoint {
 type DownloadService interface {
 	DownloadEntry(ctx context.Context, in *ReqDownloadEntry, opts ...client.CallOption) (*RespDownloadEntry, error)
 	DownloadURL(ctx context.Context, in *ReqDownloadURL, opts ...client.CallOption) (*RespDownloadURL, error)
+	DownloadFile(ctx context.Context, in *ReqDownloadFile, opts ...client.CallOption) (*RespDownloadFile, error)
 }
 
 type downloadService struct {
@@ -78,17 +79,29 @@ func (c *downloadService) DownloadURL(ctx context.Context, in *ReqDownloadURL, o
 	return out, nil
 }
 
+func (c *downloadService) DownloadFile(ctx context.Context, in *ReqDownloadFile, opts ...client.CallOption) (*RespDownloadFile, error) {
+	req := c.c.NewRequest(c.name, "DownloadService.DownloadFile", in)
+	out := new(RespDownloadFile)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DownloadService service
 
 type DownloadServiceHandler interface {
 	DownloadEntry(context.Context, *ReqDownloadEntry, *RespDownloadEntry) error
 	DownloadURL(context.Context, *ReqDownloadURL, *RespDownloadURL) error
+	DownloadFile(context.Context, *ReqDownloadFile, *RespDownloadFile) error
 }
 
 func RegisterDownloadServiceHandler(s server.Server, hdlr DownloadServiceHandler, opts ...server.HandlerOption) error {
 	type downloadService interface {
 		DownloadEntry(ctx context.Context, in *ReqDownloadEntry, out *RespDownloadEntry) error
 		DownloadURL(ctx context.Context, in *ReqDownloadURL, out *RespDownloadURL) error
+		DownloadFile(ctx context.Context, in *ReqDownloadFile, out *RespDownloadFile) error
 	}
 	type DownloadService struct {
 		downloadService
@@ -107,4 +120,8 @@ func (h *downloadServiceHandler) DownloadEntry(ctx context.Context, in *ReqDownl
 
 func (h *downloadServiceHandler) DownloadURL(ctx context.Context, in *ReqDownloadURL, out *RespDownloadURL) error {
 	return h.DownloadServiceHandler.DownloadURL(ctx, in, out)
+}
+
+func (h *downloadServiceHandler) DownloadFile(ctx context.Context, in *ReqDownloadFile, out *RespDownloadFile) error {
+	return h.DownloadServiceHandler.DownloadFile(ctx, in, out)
 }

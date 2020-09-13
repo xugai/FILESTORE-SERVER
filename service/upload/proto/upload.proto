@@ -4,7 +4,14 @@ option go_package = "proto";
 
 service UploadService{
   rpc UploadEntry(reqUploadEntry) returns (respUploadEntry) {}  // 获取上传入口地址
+  rpc UpdateFileMeta(reqUpdateFileMeta) returns (respUpdateFileMeta) {}   // 文件重命名
   rpc UploadFile(reqUploadFile) returns (respUploadFile) {}   // 标准文件上传
+  rpc InitialMultipartUpload(reqInitialMultipartUpload) returns (respInitialMultipartUpload) {}  // 初始化分块上传信息
+  rpc UploadChunkFile(reqUploadChunkFile) returns (respUploadChunkFile) {}    // 分块上传
+  rpc CompleteMultipartUpload(reqCompleteMultipartUpload) returns (respCompleteMultipartUpload) {}    // 完成分块上传，善后工作
+  rpc CancelUpload(reqCancelUpload) returns (respCancelUpload) {}   // 取消分块上传
+
+  rpc FastUpload(reqFastUpload) returns (respFastUpload) {}   // 文件秒传
 }
 
 message reqUploadEntry {
@@ -17,6 +24,17 @@ message respUploadEntry {
   string entry = 3;
 }
 
+message reqUpdateFileMeta {
+  string username = 1;
+  string filehash = 2;
+  string newfilename = 3;
+}
+
+message respUpdateFileMeta {
+  int32 code = 1;
+  string msg = 2;
+}
+
 message reqUploadFile {
   string username = 1;
   string filename = 2;
@@ -26,5 +44,62 @@ message reqUploadFile {
 message respUploadFile {
   int32 code = 1;
   string message = 2;
+}
+
+message reqInitialMultipartUpload {
+  string username = 1;
+  string filehash = 2;
+  int64 filesize = 3;
+}
+
+message respInitialMultipartUpload {
+  int32 code = 1;
+  string msg = 2;
+  bytes initialresult = 3;
+}
+
+message reqUploadChunkFile {
+  string uploadid = 1;
+  int32 chkidx = 2;
+  bytes chkcontent = 3;
+}
+
+message respUploadChunkFile {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message reqCompleteMultipartUpload {
+  string username = 1;
+  string uploadid = 2;
+  string filehash = 3;
+  int64 filesize = 4;
+  string filename = 5;
+}
+
+message respCompleteMultipartUpload {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message reqCancelUpload {
+  string filehash = 1;
+}
+
+message respCancelUpload {
+  int32 code = 1;
+  string msg = 2;
+}
+
+message reqFastUpload {
+  string username = 1;
+  string filehash = 2;
+  string filename = 3;
+  int64 filesize = 4;
+}
+
+message respFastUpload {
+  int32 code = 1;
+  string msg = 2;
 }
 

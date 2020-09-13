@@ -1,13 +1,17 @@
 package client
 
 import (
+	dbCli "FILESTORE-SERVER/service/dbproxy/client"
+	"FILESTORE-SERVER/service/download/config"
 	"FILESTORE-SERVER/service/download/proto"
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-plugins/registry/consul/v2"
+	"log"
 	"net/http"
+	"os"
 )
 
 var downloadCli proto.DownloadService
@@ -34,4 +38,52 @@ func DownloadURLHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, respDownloadURL.Url)
+}
+
+func DownloadFileHandler(c *gin.Context) {
+	fileName := c.Request.FormValue("filename")
+	fileHash := c.Request.FormValue("filehash")
+	respDownloadFile, err := downloadCli.DownloadFile(context.TODO(), &proto.ReqDownloadFile{
+		Filehash: fileHash,
+	})
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": respDownloadFile.Code,
+			"msg": respDownloadFile.Msg,
+		})
+		return
+	}
+	c.Header("content-disposition", "attachment; filename=\"" + fileName + "\"")
+	c.Data(http.StatusOK, "application/octect-stream", respDownloadFile.FileContent)
+}
+
+func RangeDownloadHandler(c *gin.Context) {
+	fileHash := c.Request.FormValue("filehash")
+	userName := c.Request.FormValue("username")
+	getFileMetaExecResult, getFileMetaErr := dbCli.GetFileMeta(fileHash)
+	getUserFileMetaExecResult, getUserFileMetaErr := dbCli.GetUserFileMeta(userName, fileHash)
+	if getFileMetaErr != nil || getUserFileMetaErr != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg": "Server error",
+		})
+		return
+	}
+	fileMeta := dbCli.ToTableFile(getFileMetaExecResult.Data)
+	userFile := dbCli.ToTableUserFile(getUserFileMetaExecResult.Data)
+	fpath := config.TmpStoreDir + fileMeta.FileName.String
+	log.Println("range-download-file-path: ", fpath)
+	file, err := os.Open(fpath)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg": "Server error",
+		})
+		log.Println(err)
+		return
+	}
+	defer file.Close()
+	c.Writer.Header().Set("Content-Type", "application/octect-stream")
+	c.Writer.Header().Set("content-disposition", "attachment; filename=\"" + userFile.FileName + "\"")
+	c.File(fpath)
 }

@@ -43,7 +43,13 @@ func NewUploadServiceEndpoints() []*api.Endpoint {
 
 type UploadService interface {
 	UploadEntry(ctx context.Context, in *ReqUploadEntry, opts ...client.CallOption) (*RespUploadEntry, error)
+	UpdateFileMeta(ctx context.Context, in *ReqUpdateFileMeta, opts ...client.CallOption) (*RespUpdateFileMeta, error)
 	UploadFile(ctx context.Context, in *ReqUploadFile, opts ...client.CallOption) (*RespUploadFile, error)
+	InitialMultipartUpload(ctx context.Context, in *ReqInitialMultipartUpload, opts ...client.CallOption) (*RespInitialMultipartUpload, error)
+	UploadChunkFile(ctx context.Context, in *ReqUploadChunkFile, opts ...client.CallOption) (*RespUploadChunkFile, error)
+	CompleteMultipartUpload(ctx context.Context, in *ReqCompleteMultipartUpload, opts ...client.CallOption) (*RespCompleteMultipartUpload, error)
+	CancelUpload(ctx context.Context, in *ReqCancelUpload, opts ...client.CallOption) (*RespCancelUpload, error)
+	FastUpload(ctx context.Context, in *ReqFastUpload, opts ...client.CallOption) (*RespFastUpload, error)
 }
 
 type uploadService struct {
@@ -68,9 +74,69 @@ func (c *uploadService) UploadEntry(ctx context.Context, in *ReqUploadEntry, opt
 	return out, nil
 }
 
+func (c *uploadService) UpdateFileMeta(ctx context.Context, in *ReqUpdateFileMeta, opts ...client.CallOption) (*RespUpdateFileMeta, error) {
+	req := c.c.NewRequest(c.name, "UploadService.UpdateFileMeta", in)
+	out := new(RespUpdateFileMeta)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *uploadService) UploadFile(ctx context.Context, in *ReqUploadFile, opts ...client.CallOption) (*RespUploadFile, error) {
 	req := c.c.NewRequest(c.name, "UploadService.UploadFile", in)
 	out := new(RespUploadFile)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *uploadService) InitialMultipartUpload(ctx context.Context, in *ReqInitialMultipartUpload, opts ...client.CallOption) (*RespInitialMultipartUpload, error) {
+	req := c.c.NewRequest(c.name, "UploadService.InitialMultipartUpload", in)
+	out := new(RespInitialMultipartUpload)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *uploadService) UploadChunkFile(ctx context.Context, in *ReqUploadChunkFile, opts ...client.CallOption) (*RespUploadChunkFile, error) {
+	req := c.c.NewRequest(c.name, "UploadService.UploadChunkFile", in)
+	out := new(RespUploadChunkFile)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *uploadService) CompleteMultipartUpload(ctx context.Context, in *ReqCompleteMultipartUpload, opts ...client.CallOption) (*RespCompleteMultipartUpload, error) {
+	req := c.c.NewRequest(c.name, "UploadService.CompleteMultipartUpload", in)
+	out := new(RespCompleteMultipartUpload)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *uploadService) CancelUpload(ctx context.Context, in *ReqCancelUpload, opts ...client.CallOption) (*RespCancelUpload, error) {
+	req := c.c.NewRequest(c.name, "UploadService.CancelUpload", in)
+	out := new(RespCancelUpload)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *uploadService) FastUpload(ctx context.Context, in *ReqFastUpload, opts ...client.CallOption) (*RespFastUpload, error) {
+	req := c.c.NewRequest(c.name, "UploadService.FastUpload", in)
+	out := new(RespFastUpload)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -82,13 +148,25 @@ func (c *uploadService) UploadFile(ctx context.Context, in *ReqUploadFile, opts 
 
 type UploadServiceHandler interface {
 	UploadEntry(context.Context, *ReqUploadEntry, *RespUploadEntry) error
+	UpdateFileMeta(context.Context, *ReqUpdateFileMeta, *RespUpdateFileMeta) error
 	UploadFile(context.Context, *ReqUploadFile, *RespUploadFile) error
+	InitialMultipartUpload(context.Context, *ReqInitialMultipartUpload, *RespInitialMultipartUpload) error
+	UploadChunkFile(context.Context, *ReqUploadChunkFile, *RespUploadChunkFile) error
+	CompleteMultipartUpload(context.Context, *ReqCompleteMultipartUpload, *RespCompleteMultipartUpload) error
+	CancelUpload(context.Context, *ReqCancelUpload, *RespCancelUpload) error
+	FastUpload(context.Context, *ReqFastUpload, *RespFastUpload) error
 }
 
 func RegisterUploadServiceHandler(s server.Server, hdlr UploadServiceHandler, opts ...server.HandlerOption) error {
 	type uploadService interface {
 		UploadEntry(ctx context.Context, in *ReqUploadEntry, out *RespUploadEntry) error
+		UpdateFileMeta(ctx context.Context, in *ReqUpdateFileMeta, out *RespUpdateFileMeta) error
 		UploadFile(ctx context.Context, in *ReqUploadFile, out *RespUploadFile) error
+		InitialMultipartUpload(ctx context.Context, in *ReqInitialMultipartUpload, out *RespInitialMultipartUpload) error
+		UploadChunkFile(ctx context.Context, in *ReqUploadChunkFile, out *RespUploadChunkFile) error
+		CompleteMultipartUpload(ctx context.Context, in *ReqCompleteMultipartUpload, out *RespCompleteMultipartUpload) error
+		CancelUpload(ctx context.Context, in *ReqCancelUpload, out *RespCancelUpload) error
+		FastUpload(ctx context.Context, in *ReqFastUpload, out *RespFastUpload) error
 	}
 	type UploadService struct {
 		uploadService
@@ -105,6 +183,30 @@ func (h *uploadServiceHandler) UploadEntry(ctx context.Context, in *ReqUploadEnt
 	return h.UploadServiceHandler.UploadEntry(ctx, in, out)
 }
 
+func (h *uploadServiceHandler) UpdateFileMeta(ctx context.Context, in *ReqUpdateFileMeta, out *RespUpdateFileMeta) error {
+	return h.UploadServiceHandler.UpdateFileMeta(ctx, in, out)
+}
+
 func (h *uploadServiceHandler) UploadFile(ctx context.Context, in *ReqUploadFile, out *RespUploadFile) error {
 	return h.UploadServiceHandler.UploadFile(ctx, in, out)
+}
+
+func (h *uploadServiceHandler) InitialMultipartUpload(ctx context.Context, in *ReqInitialMultipartUpload, out *RespInitialMultipartUpload) error {
+	return h.UploadServiceHandler.InitialMultipartUpload(ctx, in, out)
+}
+
+func (h *uploadServiceHandler) UploadChunkFile(ctx context.Context, in *ReqUploadChunkFile, out *RespUploadChunkFile) error {
+	return h.UploadServiceHandler.UploadChunkFile(ctx, in, out)
+}
+
+func (h *uploadServiceHandler) CompleteMultipartUpload(ctx context.Context, in *ReqCompleteMultipartUpload, out *RespCompleteMultipartUpload) error {
+	return h.UploadServiceHandler.CompleteMultipartUpload(ctx, in, out)
+}
+
+func (h *uploadServiceHandler) CancelUpload(ctx context.Context, in *ReqCancelUpload, out *RespCancelUpload) error {
+	return h.UploadServiceHandler.CancelUpload(ctx, in, out)
+}
+
+func (h *uploadServiceHandler) FastUpload(ctx context.Context, in *ReqFastUpload, out *RespFastUpload) error {
+	return h.UploadServiceHandler.FastUpload(ctx, in, out)
 }

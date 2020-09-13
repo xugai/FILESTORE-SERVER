@@ -13,6 +13,7 @@
         var filename = "unknown";
         var filesize = -1;
 
+        //TODO 如果用户修改的文件名没有携带jpg或jpeg后缀的话，那我们要将它加上. 2020.09.13
         $(document).ready(function() {
             req.open("GET", url, true);
             addListeners(req);
