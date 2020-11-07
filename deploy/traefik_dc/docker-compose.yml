@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  proxy:
+    image: traefik
+    container_name: "traefik"
+#    networks:
+#      - webgateway
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      # 自动申请的证书存放位置
+      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config:/etc/traefik
+
+

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: account
+  labels:
+    app: account
+spec:
+  containers:
+    - name: account
+      image: filestoreserver/account
+      imagePullPolicy: IfNotPresent

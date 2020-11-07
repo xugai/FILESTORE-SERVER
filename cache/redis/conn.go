@@ -9,7 +9,7 @@ import (
 var (
 	connectionPool *redis.Pool
 	network = "tcp"
-	host = "127.0.0.1:6333"
+	host = "192.168.10.3:6333"
 	pwd = "root"
 	initialErr error
 )

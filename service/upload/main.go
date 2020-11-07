@@ -6,16 +6,20 @@ import (
 	"FILESTORE-SERVER/service/upload/proto"
 	"FILESTORE-SERVER/service/upload/route"
 	"github.com/micro/go-micro/v2"
-	"github.com/micro/go-micro/v2/registry"
+	//"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/server/grpc"
-	"github.com/micro/go-plugins/registry/consul/v2"
+	//"github.com/micro/go-plugins/registry/consul/v2"
+	"github.com/micro/go-plugins/registry/kubernetes/v2"
 	"log"
 )
 
 func startupUploadService() {
-	newRegistry := consul.NewRegistry(registry.Addrs("127.0.0.1:8500"))
+
+	k8sRegistry := kubernetes.NewRegistry()
+
+	//newRegistry := consul.NewRegistry(registry.Addrs("192.168.10.3:8500"))
 	service := micro.NewService(
-		micro.Registry(newRegistry),
+		micro.Registry(k8sRegistry),
 		micro.Name("go.micro.service.upload"),
 	)
 	service.Init()

@@ -6,8 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/micro/go-micro/v2"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-plugins/registry/consul/v2"
+	"github.com/micro/go-plugins/registry/kubernetes/v2"
 	"github.com/mitchellh/mapstructure"
 	"log"
 )
@@ -23,9 +22,10 @@ type FileMeta struct {
 var dbCli proto.DBProxyService
 
 func init() {
-	newRegistry := consul.NewRegistry(registry.Addrs("127.0.0.1:8500"))
+	k8sRegistry := kubernetes.NewRegistry()
+	//newRegistry := consul.NewRegistry(registry.Addrs("192.168.10.3:8500"))
 	service := micro.NewService(
-		micro.Registry(newRegistry),
+		micro.Registry(k8sRegistry),
 		)
 	service.Init()
 	dbCli = proto.NewDBProxyService("go.micro.service.dbproxy", service.Client())

@@ -1,3 +1,3 @@
 package config
 
-const MySQLSource = "root:xuqiubing@tcp(127.0.0.1)/fileserver?charset=utf8"
+var MySQLSource = "behe:xuqiubing@tcp(192.168.10.3)/fileserver?charset=utf8"

@@ -1,0 +1,34 @@
+version: '2'
+#注意二级域名，要与你创建的docker network的名字一样
+services:
+  upload:
+    image: filestoreserver/upload
+    container_name: upload
+    networks:
+      - web
+    volumes:
+      - /data/filestoreserver:/data/filestoreserver
+      - /data/filestoreserver_part:/data/filestoreserver_part
+  download:
+    image: filestoreserver/download
+    container_name: download
+    networks:
+      - web
+    volumes:
+    - /data/filestoreserver:/data/filestoreserver
+    - /data/filestoreserver_part:/data/filestoreserver_part
+  account:
+    image: filestoreserver/account
+    container_name: account
+    networks:
+      - web
+  dbproxy:
+    image: filestoreserver/dbproxy
+    container_name: dbproxy
+    networks:
+      - web
+networks:
+  web:
+    external:
+      name: filestoreserver_network
+

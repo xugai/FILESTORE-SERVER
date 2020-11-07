@@ -6,15 +6,15 @@ import (
 	"FILESTORE-SERVER/service/download/proto"
 	"FILESTORE-SERVER/service/download/route"
 	"github.com/micro/go-micro/v2"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-plugins/registry/consul/v2"
+	"github.com/micro/go-plugins/registry/kubernetes/v2"
 	"log"
 )
 
 func startupDownloadService() {
-	newRegistry := consul.NewRegistry(registry.Addrs("127.0.0.1:8500"))
+	k8sRegistry := kubernetes.NewRegistry()
+	//newRegistry := consul.NewRegistry(registry.Addrs("192.168.10.3:8500"))
 	service := micro.NewService(
-		micro.Registry(newRegistry),
+		micro.Registry(k8sRegistry),
 		micro.Name("go.micro.service.download"),
 	)
 	service.Init()

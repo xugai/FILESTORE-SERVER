@@ -4,5 +4,5 @@ import "FILESTORE-SERVER/service/apigw/route"
 
 func main() {
 	router := route.Router()
-	router.Run(":8080")
+	router.Run(":9090")
 }

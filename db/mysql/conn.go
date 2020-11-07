@@ -10,7 +10,7 @@ import (
 var db *sql.DB
 
 func init() {
-	db, _ = sql.Open("mysql", "root:xuqiubing@tcp(127.0.0.1)/fileserver?charset=utf8")
+	db, _ = sql.Open("mysql", "behe:xuqiubing@tcp(192.168.10.3)/fileserver?charset=utf8")
 	err := db.Ping()
 	if err != nil {
 		fmt.Printf("Failed to ping succeed with mysql: %v\n", err)

@@ -7,7 +7,7 @@ import (
 
 const (
 	AsyncTransferEnable = true // 是否开启异步模式，true表示开启
-	RabbitURL = "amqp://guest:guest@127.0.0.1:5672/" // rabbitmq的API访问的入口
+	RabbitURL = "amqp://guest:guest@192.168.10.3:5672/" // rabbitmq的API访问的入口
 )
 
 var Exchange = "filestoreserver.trans"

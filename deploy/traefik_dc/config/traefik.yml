@@ -1,0 +1,32 @@
+# Docker configuration backend
+providers:
+  docker: {}
+  file:
+    directory: /etc/traefik
+    filename: dynamic.yml
+    watch: true
+
+log:
+  level: DEBUG
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+  apigw-web:
+    address: ":9090"
+  upload-web:
+    address: ":28080"
+  download-web:
+    address: ":38080"
+
+certificatesResolvers:
+  mytlschallenge:
+    acme:
+      email: "behe@domain"
+      storage: "/letsencrypt/acme.json"
+      tlsChallenge: {}
+# API and dashboard configuration
+api:
+  dashboard: true

@@ -9,8 +9,7 @@ import (
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/client/grpc"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-plugins/registry/consul/v2"
+	"github.com/micro/go-plugins/registry/kubernetes/v2"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,9 +24,10 @@ var timeoutSetting client.CallOption = func(o *client.CallOptions) {
 }
 
 func init() {
-	newRegistry := consul.NewRegistry(registry.Addrs("127.0.0.1:8500"))
+	k8sRegistry := kubernetes.NewRegistry()
+	//newRegistry := consul.NewRegistry(registry.Addrs("192.168.10.3:8500"))
 	newService := micro.NewService(
-		micro.Registry(newRegistry),
+		micro.Registry(k8sRegistry),
 	)
 	newService.Init()
 	c := newService.Client()

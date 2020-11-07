@@ -1,0 +1,22 @@
+http:
+  routers:
+    api:
+      entryPoints:
+        - "web"
+      rule: "Host(`traefik.domain.com`)"
+      service: "api@internal"
+    apigw:
+      entryPoints:
+        - "apigw-web"
+      rule: "Host(`apigw.domain.com`)"
+      service: "apigw@docker"
+    upload:
+      entryPoints:
+        - "upload-web"
+      rule: "Host(`upload.domain.com`)"
+      service: "upload@docker"
+    download:
+      entryPoints:
+        - "download-web"
+      rule: "Host(`download.domain.com`)"
+      service: "download@docker"

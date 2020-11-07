@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"FILESTORE-SERVER/db/mysql"
 	"FILESTORE-SERVER/service/dbproxy/conn"
 	"fmt"
 )
@@ -70,7 +69,7 @@ func UserSignin(userName string, passWord string) ExecResult {
 			Suc: false,
 		}
 	}
-	parseRows := mysql.ParseRows(resultRow)
+	parseRows := conn.ParseRows(resultRow)
 	// []uint8 == []byte ?
 	if len(parseRows) > 0 && string(parseRows[0]["user_pwd"].([]byte)) == passWord {
 		return ExecResult{

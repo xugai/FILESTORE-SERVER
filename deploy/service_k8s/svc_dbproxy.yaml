@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbproxy
+  labels:
+    app: dbproxy
+spec:
+  containers:
+    - name: dbproxy
+      image: filestoreserver/dbproxy
+      imagePullPolicy: IfNotPresent
